@@ -1,4 +1,5 @@
-package com.codeoftheweb.salvo;
+package com.codeoftheweb.salvo.model;
+
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -7,28 +8,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Ship {
+public class Salvo {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
     private long id;
 
-    private String type;
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="gamePlayer_id")
     private GamePlayer gamePlayer;
+
+    private int turn;
 
     @ElementCollection
     @Column(name="locations")
     private List<String> locations = new ArrayList<>();
 
-    public Ship() {
+    public Salvo() {
     }
 
-    public Ship(String type, GamePlayer gamePlayer, List<String> locations) {
-        this.type = type;
+    public Salvo(GamePlayer gamePlayer, int turn, List<String> locations) {
         this.gamePlayer = gamePlayer;
+        this.turn = turn;
         this.locations = locations;
     }
 
@@ -36,16 +37,20 @@ public class Ship {
         return id;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public GamePlayer getGamePlayer() {
+        return gamePlayer;
     }
 
     public void setGamePlayer(GamePlayer gamePlayer) {
         this.gamePlayer = gamePlayer;
+    }
+
+    public int getTurn() {
+        return turn;
+    }
+
+    public void setTurn(int turn) {
+        this.turn = turn;
     }
 
     public List<String> getLocations() {
@@ -54,11 +59,5 @@ public class Ship {
 
     public void setLocations(List<String> locations) {
         this.locations = locations;
-    }
-
-
-
-    public GamePlayer getGamePlayer() {
-        return gamePlayer;
     }
 }

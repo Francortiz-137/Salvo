@@ -1,9 +1,19 @@
-package com.codeoftheweb.salvo;
+package com.codeoftheweb.salvo.controller;
+
+import com.codeoftheweb.salvo.model.*;
+import com.codeoftheweb.salvo.repository.PlayerRepository;
+import com.codeoftheweb.salvo.service.GamePlayerService;
+import com.codeoftheweb.salvo.service.GameService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,20 +24,37 @@ import static java.util.stream.Collectors.toList;
 public class SalvoController {
 
     @Autowired
-    private GameRepository gameRepo;
+    private GameService gameService;
+    //private GameRepository gameRepo;
     @Autowired
-    private GamePlayerRepository gpRepo;
+    private GamePlayerService gamePlayerService;
+    //private GamePlayerRepository gpRepo;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PlayerRepository playerRepository;
 
     @RequestMapping("/games")
-    public Map<String, Object> getGames()
+    public Map<String, Object> getGames(Authentication authentication)
     {
+
+
         Map<String, Object> gMap = new LinkedHashMap<String,Object>();
         List<Map<String, Object>> games = new ArrayList<>();
 
-        gMap.put("games",gameRepo.findAll().stream()
+
+        gMap.put("games",gameService.findAll().stream()
                                 .map(game -> this.gameToDTO(game))
                                 .collect(toList()));
+        if(getUser(authentication)!= null) {
+            Map<String,Object> dtoPlayer = new LinkedHashMap<>();
+            dtoPlayer.put("id",getUser(authentication).getId());
+            dtoPlayer.put("email",getUser(authentication).getName());
+            gMap.put("player", dtoPlayer);
 
+        }else{
+            gMap.put("player","Guest");
+        }
         return gMap;
     }
 
@@ -37,26 +64,25 @@ public class SalvoController {
         //nn: Gameplayer Id
 
         Map<String, Object> gpMap = new LinkedHashMap<String,Object>();
-        Optional<GamePlayer> gamePlayer = gpRepo.findById(nn);
 
-        if(gamePlayer.isPresent()) {
-            Set<Ship> ships = gamePlayer.get().getShips();
-            List<GamePlayer> players = gamePlayer.get().getGame().getGamePlayers();
-            Set<Salvo> salvos = players.stream().map(GamePlayer::getSalvoes).flatMap(Collection::stream).collect(Collectors.toSet());
+        GamePlayer gamePlayer = gamePlayerService.findGamePlayerById(nn);
 
-            //Game Information
-            gpMap = gameToDTO(gamePlayer.get().getGame());
-            //Ships Information
-            gpMap.put("ships", ships.stream()
-                    .map(sh -> this.shipsToDTO(sh))
-                    .collect(toList()));
+        Set<Ship> ships = gamePlayer.getShips();
+        List<GamePlayer> players = gamePlayer.getGame().getGamePlayers();
+        Set<Salvo> salvos = players.stream().map(GamePlayer::getSalvoes).flatMap(Collection::stream).collect(Collectors.toSet());
 
-            //Salvos Information
-            gpMap.put("salvoes", salvos.stream()
-                    .map(sal -> this.salvosToDTO(sal))
-                    .collect(toList()));
+        //Game Information
+        gpMap = gameToDTO(gamePlayer.getGame());
+        //Ships Information
+        gpMap.put("ships", ships.stream()
+                .map(sh -> this.shipsToDTO(sh))
+                .collect(toList()));
 
-        }
+        //Salvos Information
+        gpMap.put("salvoes", salvos.stream()
+                .map(sal -> this.salvosToDTO(sal))
+                .collect(toList()));
+
         return gpMap;
     }
 
@@ -141,4 +167,31 @@ public class SalvoController {
 
         return dto;
     }
+
+
+
+
+    @RequestMapping(path = "/players", method = RequestMethod.POST)
+    public ResponseEntity<Object> register(
+            @RequestParam String email, @RequestParam String password) {
+
+        if (email.isEmpty() || password.isEmpty()) {
+            return new ResponseEntity<>("Missing data", HttpStatus.FORBIDDEN);
+        }
+
+        if (playerRepository.findByUserName(email) !=  null) {
+            return new ResponseEntity<>("Name already in use", HttpStatus.FORBIDDEN);
+        }
+
+        playerRepository.save(new Player(email, passwordEncoder.encode(password)));
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    private Player getUser(Authentication authentication) {
+        if(authentication != null)
+            return playerRepository.findByUserName(authentication.getName());
+        else
+            return null;
+    }
+
 }

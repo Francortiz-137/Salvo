@@ -1,4 +1,4 @@
-package com.codeoftheweb.salvo;
+package com.codeoftheweb.salvo.model;
 
 import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
@@ -6,7 +6,6 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 public class Player {
@@ -16,6 +15,7 @@ public class Player {
     private long id;
     private String userName;
     private String name;
+    private String password;
     @OneToMany(mappedBy="player", fetch=FetchType.EAGER)
     private List<GamePlayer> gamesPlayed = new ArrayList<>();
 
@@ -24,9 +24,15 @@ public class Player {
 
     public Player() { }
 
-    public Player(String name, String userName) {
+    public Player(String name, String userName, String password) {
         this.userName = userName;
         this.name = name;
+        this.password = password;
+    }
+
+    public Player(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
     }
 
 
@@ -74,5 +80,13 @@ public class Player {
                     .filter(p -> p.getGame().equals(game))
                     .findFirst()
                     .orElse(null);
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

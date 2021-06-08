@@ -1,14 +1,11 @@
-package com.codeoftheweb.salvo;
+package com.codeoftheweb.salvo.model;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
-import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-
-import static java.util.stream.Collectors.toList;
 
 @Entity
 public class Game {
