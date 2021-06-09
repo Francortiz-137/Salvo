@@ -16,11 +16,12 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game saveGame(Game game) {
-        return null;
+        gameRepository.save(game);
+        return game;
     }
 
     @Override
-    public List<Game> getGamePlayer() {
+    public List<Game> getGame() {
         return null;
     }
 
@@ -36,7 +37,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game findGameById(Long id) {
-        return gameRepository.findById(id).get();
+        return gameRepository.findGameById(id);
     }
 
     @Override

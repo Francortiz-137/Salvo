@@ -12,4 +12,6 @@ import java.util.List;
 public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
 
     List<GamePlayer> findByDate(LocalDateTime date);
+
+    GamePlayer findGamePlayerById(Long id);
 }

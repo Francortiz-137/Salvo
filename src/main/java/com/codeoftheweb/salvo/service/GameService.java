@@ -8,7 +8,7 @@ public interface GameService {
 
     Game saveGame(Game game);
 
-    List<Game> getGamePlayer();
+    List<Game> getGame();
 
     Game updateGame(Game game);
 

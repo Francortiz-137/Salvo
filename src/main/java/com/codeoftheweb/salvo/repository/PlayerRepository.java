@@ -11,7 +11,8 @@ import java.util.List;
 @RepositoryRestResource
 public interface PlayerRepository extends JpaRepository<Player, Long> {
     //List<Player> findByUserName(String userName);
-    Player findByUserName( @Param("username") String userName);
+    Player findByUserName( @Param("name") String userName);
+    Player findPlayerById( @Param("id") Long id);
 
 }
 

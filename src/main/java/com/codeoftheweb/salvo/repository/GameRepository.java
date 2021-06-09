@@ -13,4 +13,6 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     List<Game> findByGameDate(LocalDateTime date);
 
+    Game findGameById(Long id);
+
 }

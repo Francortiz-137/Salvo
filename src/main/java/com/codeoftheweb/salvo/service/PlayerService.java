@@ -6,16 +6,19 @@ import java.util.List;
 
 public interface PlayerService {
 
-    Player saveGame(Player game);
+    Player savePlayer(Player player);
 
-    List<Player> getGamePlayer();
+    List<Player> getPlayer();
 
-    Player updateGame(Player player);
+    Player updatePlayer(Player player);
 
     boolean existPlayer(Long id);
 
-    Player findPlayerById(Long id);
+    Player findPlayerByUserName(String userName);
 
     List<Player> findAll();
 
+    Player findByUserName(String username);
+
+    Player findById(Long id);
 }
