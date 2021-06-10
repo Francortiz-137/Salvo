@@ -14,7 +14,7 @@ public interface GameService {
 
     boolean existGame(Long id);
 
-    Game findGameById(Long id);
+    Game findById(Long id);
 
     List<Game> findAll();
 

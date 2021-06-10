@@ -14,8 +14,6 @@ public interface PlayerService {
 
     boolean existPlayer(Long id);
 
-    Player findPlayerByUserName(String userName);
-
     List<Player> findAll();
 
     Player findByUserName(String username);

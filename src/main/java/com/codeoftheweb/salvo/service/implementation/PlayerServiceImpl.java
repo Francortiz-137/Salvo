@@ -16,8 +16,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public Player savePlayer(Player player) {
-        playerRepository.save(player);
-        return player;
+        return playerRepository.save(player);
     }
 
     @Override
@@ -35,23 +34,19 @@ public class PlayerServiceImpl implements PlayerService {
         return false;
     }
 
-    public Player findPlayerByUserName(String name) {
-        return playerRepository.findByUserName(name);
-    }
-
     @Override
     public List<Player> findAll() {
-        return null;
+        return playerRepository.findAll();
     }
 
     @Override
     public Player findByUserName(String username) {
-        return playerRepository.findByUserName(username);
+        return playerRepository.findByUserName(username).get();
     }
 
     @Override
     public Player findById(Long id) {
-        return playerRepository.findPlayerById(id);
+        return playerRepository.findById(id).get();
     }
 
 }

@@ -3,6 +3,7 @@ package com.codeoftheweb.salvo.model;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -16,7 +17,7 @@ public class Game {
     private long id;
     private LocalDateTime gameDate;
     @OneToMany(mappedBy="game", fetch=FetchType.EAGER)
-    private List<GamePlayer> gamePlayers = new ArrayList<>();
+    private Set<GamePlayer> gamePlayers = new HashSet<>();
     @OneToMany(mappedBy="game", fetch=FetchType.EAGER)
     private List<Score> scores = new ArrayList<>();
 
@@ -41,7 +42,7 @@ public class Game {
     }
 
 
-    public List<GamePlayer> getGamePlayers() {
+    public Set<GamePlayer> getGamePlayers() {
         return gamePlayers;
     }
 

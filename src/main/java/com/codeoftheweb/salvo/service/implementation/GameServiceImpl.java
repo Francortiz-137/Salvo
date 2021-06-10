@@ -16,8 +16,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game saveGame(Game game) {
-        gameRepository.save(game);
-        return game;
+        return gameRepository.save(game);
     }
 
     @Override
@@ -32,12 +31,15 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean existGame(Long id) {
-        return false;
+        return gameRepository.findById(id).isPresent();
     }
 
     @Override
-    public Game findGameById(Long id) {
-        return gameRepository.findGameById(id);
+    public Game findById(Long id) {
+        if(gameRepository.findById(id).isPresent())
+            return gameRepository.findById(id).get();
+        else
+            return null;
     }
 
     @Override
