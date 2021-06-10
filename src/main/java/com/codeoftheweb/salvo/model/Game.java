@@ -3,6 +3,7 @@ package com.codeoftheweb.salvo.model;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;

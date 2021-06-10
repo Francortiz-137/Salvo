@@ -17,7 +17,7 @@ public class Player {
     private String name;
     private String password;
     @OneToMany(mappedBy="player", fetch=FetchType.EAGER)
-    private List<GamePlayer> gamesPlayed = new ArrayList<>();
+    private List<GamePlayer> gamePlayers = new ArrayList<>();
 
     @OneToMany(mappedBy="player", fetch=FetchType.EAGER)
     private List<Score> scores = new ArrayList<>();
@@ -61,13 +61,13 @@ public class Player {
     }
 
     @JsonIgnore
-    public List<GamePlayer> getGames() {
-        return gamesPlayed;
+    public List<GamePlayer> getGamePlayers() {
+        return gamePlayers;
     }
 
     public void addGamePlayer(GamePlayer gameplayer) {
         gameplayer.setPlayer(this);
-        gamesPlayed.add(gameplayer);
+        gamePlayers.add(gameplayer);
     }
 
     public void addScore(Score score) {

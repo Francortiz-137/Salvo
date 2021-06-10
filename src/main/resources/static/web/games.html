@@ -17,7 +17,6 @@
                         <button type="submit" class="btn btn-info">Log out</button></form>
                     </div>
                 </div>
-
                 <div class="col-sm-8">
                     <form class="form-inline" id="login-form" onsubmit="return false">
                         <label for="username">Name:</label><input class="form-control" id="username" type="email" name="username" required>
@@ -37,8 +36,8 @@
     <h3 id="gameCreatedSuccess" class="textCenter">Game Created Successfully! Redirecting to Game Page...</h3>
     <h3 id="gameJoinedSuccess" class="textCenter">Game Joined Successfully! Redirecting to Game Page...</h3>
 
-    <form class="textCenter" id="createGame" onsubmit="return false">
-        <button type="submit" class="btn btn-warning">CREATE NEW GAME</button>
+    <form class="textCenter" id="createGameForm">
+        <input class="btn btn-warning"  type="submit"  id="createGame"  value="CREATE NEW GAME"/>
     </form>
 
     <div class="row">

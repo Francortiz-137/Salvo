@@ -1,6 +1,7 @@
 package com.codeoftheweb.salvo.controller;
 
 import com.codeoftheweb.salvo.model.*;
+import com.codeoftheweb.salvo.repository.GamePlayerRepository;
 import com.codeoftheweb.salvo.service.GamePlayerService;
 import com.codeoftheweb.salvo.service.GameService;
 
@@ -26,10 +27,8 @@ public class SalvoController {
 
     @Autowired
     private GameService gameService;
-    //private GameRepository gameRepo;
     @Autowired
     private GamePlayerService gamePlayerService;
-    //private GamePlayerRepository gpRepo;
     @Autowired
     private PlayerService playerService;
     @Autowired
@@ -71,7 +70,6 @@ public class SalvoController {
         if(isGuest(authentication)) {
             return new ResponseEntity<Map<String, Object>>(util.makeMap("error","Not Authorized"),HttpStatus.UNAUTHORIZED);
         }
-        //if the user logged-in corresponds to the gameplayer, then can access the game information
 
         Map<String, Object> gpMap = new LinkedHashMap<String,Object>();
         GamePlayer gamePlayer = gamePlayerService.findGamePlayerById(nn);
@@ -86,11 +84,19 @@ public class SalvoController {
         }
 
         Set<Ship> ships = gamePlayer.getShips();
-        List<GamePlayer> players = gamePlayer.getGame().getGamePlayers();
+        Game game = gamePlayer.getGame();
+        List<GamePlayer> players = game.getGamePlayers();
         Set<Salvo> salvos = players.stream().map(GamePlayer::getSalvoes).flatMap(Collection::stream).collect(Collectors.toSet());
+
+        Map<String,Object> hits = new LinkedHashMap<String,Object>();
+        hits.put("self", new ArrayList<>());
+        hits.put("opponent", new ArrayList<>());
+
 
         //Game Information
         gpMap = gameToDTO(gamePlayer.getGame());
+        //Game State
+        gpMap.put("gameState", "PLACESHIPS");
         //Ships Information
         gpMap.put("ships", ships.stream()
                 .map(sh -> this.shipsToDTO(sh))
@@ -100,6 +106,8 @@ public class SalvoController {
         gpMap.put("salvoes", salvos.stream()
                 .map(sal -> this.salvosToDTO(sal))
                 .collect(toList()));
+
+        gpMap.put("hits", hits);
 
         return new ResponseEntity<Map<String, Object>>(gpMap, HttpStatus.OK);
     }
@@ -116,21 +124,13 @@ public class SalvoController {
         dto.put("gamePlayers", game.getGamePlayers().stream()
                 .map(gamePlayer -> this.gamePlayersToDTO(gamePlayer))
                 .collect(toList()));
-        dto.put("players", game.getGamePlayers().stream()
-                .map(gamePlayer -> this.newGamePlayersToDTO(gamePlayer))
-                .collect(toList()));
+
         dto.put("scores",   game.getGamePlayers().stream()
                                         .map(gp -> this.scoresToDTO(gp))
                                         .collect(toList()));
         return dto;
     }
 
-    private Map<String,Object> newGamePlayersToDTO(GamePlayer gp){
-        Map<String,Object> dto = util.makeMap("gpid", gp.getId());
-        dto.put("id",gp.getPlayer().getId());
-        dto.put("name",gp.getPlayer().getUserName());
-        return dto;
-    }
 
     private Map<String,Object> scoresToDTO(GamePlayer gp) {
         //return Score information
@@ -161,12 +161,6 @@ public class SalvoController {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id",gp.getId());
         dto.put("player", playersToDTO(gp.getPlayer()));
-
-        if(gp.getScore(gp.getGame()) != null)
-            dto.put("score", gp.getScore(gp.getGame()).getPoints());
-        else
-            dto.put("score", null);
-
         return dto;
     }
 
@@ -194,17 +188,17 @@ public class SalvoController {
 
     @RequestMapping(path = "/players", method = RequestMethod.POST)
     public ResponseEntity<Object> register(
-            @RequestParam String username, @RequestParam String password) {
+            @RequestParam String email, @RequestParam String password) {
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (email.isEmpty() || password.isEmpty()) {
             return new ResponseEntity<>(util.makeMap("error","Missing data"), HttpStatus.FORBIDDEN);
         }
 
-        if (playerService.findByUserName(username) !=  null) {
+        if (playerService.findByUserName(email) !=  null) {
             return new ResponseEntity<>(util.makeMap("error","Name already in use"), HttpStatus.FORBIDDEN);
         }
 
-        playerService.savePlayer(new Player(username, passwordEncoder.encode(password)));
+        playerService.savePlayer(new Player(email, passwordEncoder.encode(password)));
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

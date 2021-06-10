@@ -16,8 +16,7 @@ public class GamePlayerServiceImpl implements GamePlayerService
 
     @Override
     public GamePlayer saveGamePlayer(GamePlayer gamePlayer) {
-        gamePlayerRepository.save(gamePlayer);
-        return gamePlayer;
+        return gamePlayerRepository.save(gamePlayer);
     }
 
     @Override
@@ -37,6 +36,9 @@ public class GamePlayerServiceImpl implements GamePlayerService
 
     @Override
     public GamePlayer findGamePlayerById(Long id) {
-        return gamePlayerRepository.findGamePlayerById(id);
+        if(gamePlayerRepository.findById(id).isPresent())
+            return gamePlayerRepository.findById(id).get();
+        else
+            return null;
     }
 }

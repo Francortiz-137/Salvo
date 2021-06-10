@@ -3,6 +3,7 @@ package com.codeoftheweb.salvo;
 import com.codeoftheweb.salvo.model.*;
 import com.codeoftheweb.salvo.repository.*;
 import com.codeoftheweb.salvo.service.GamePlayerService;
+import com.codeoftheweb.salvo.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Optional;
 
 @SpringBootApplication
 public class SalvoApplication extends SpringBootServletInitializer {
@@ -406,14 +408,14 @@ public class SalvoApplication extends SpringBootServletInitializer {
 @Configuration
 class WebSecurityConfiguration extends GlobalAuthenticationConfigurerAdapter {
 	@Autowired
-	PlayerRepository playerRepository;
+	PlayerService playerService;
 
 
 	@Override
 	public void init(AuthenticationManagerBuilder auth) throws Exception {
 
 		 auth.userDetailsService(inputName-> {
-			 Player player = playerRepository.findByUserName(inputName);
+			 Player player = playerService.findByUserName(inputName);
 			 if (player != null) {
 				 return new User(player.getUserName(), player.getPassword(),
 						 AuthorityUtils.createAuthorityList("USER"));
