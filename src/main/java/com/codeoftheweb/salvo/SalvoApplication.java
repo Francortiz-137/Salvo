@@ -3,6 +3,8 @@ package com.codeoftheweb.salvo;
 import com.codeoftheweb.salvo.model.*;
 import com.codeoftheweb.salvo.repository.*;
 import com.codeoftheweb.salvo.service.GamePlayerService;
+import com.codeoftheweb.salvo.service.GameService;
+import com.codeoftheweb.salvo.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,12 +33,22 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 @SpringBootApplication
 public class SalvoApplication extends SpringBootServletInitializer {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	GameService gameServ;
+
+	@Autowired
+	PlayerService playerServ;
+	@Autowired
+	GamePlayerService gamePlayerServ;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SalvoApplication.class, args);
@@ -54,6 +66,7 @@ public class SalvoApplication extends SpringBootServletInitializer {
 			Player player2 = new Player("Chloe O'Brian", "c.obrian@ctu.gov", passwordEncoder().encode("42"));
 			Player player3 = new Player("Kim Bauer", "kim_bauer@gmail.com", passwordEncoder().encode("kb") );
 			Player player4 = new Player("Tony Almeida","t.almeida@ctu.gov", passwordEncoder().encode("mole"));
+
 			playerRepo.save(player1);
 			playerRepo.save(player2);
 			playerRepo.save(player3);
@@ -391,7 +404,16 @@ public class SalvoApplication extends SpringBootServletInitializer {
 			gameRepo.save(game1);
 			gameRepo.save(game2);
 
+			/** para debugging
+			List<Game> games = gameRepo.findAll();
+			List<Player> player = playerRepo.findAll();
+			List<GamePlayer> gamePlayers = gamePlayerRepo.findAll();
 
+
+			List<Game> gamesServ = gameServ.findAll();
+			List<Player> playersServ = playerServ.findAll();
+			List<GamePlayer> gamePlayersServ = gamePlayerServ.findAll();
+			 */
 		};
 
 	}
@@ -406,14 +428,14 @@ public class SalvoApplication extends SpringBootServletInitializer {
 @Configuration
 class WebSecurityConfiguration extends GlobalAuthenticationConfigurerAdapter {
 	@Autowired
-	PlayerRepository playerRepository;
+	PlayerService playerService;
 
 
 	@Override
 	public void init(AuthenticationManagerBuilder auth) throws Exception {
 
 		 auth.userDetailsService(inputName-> {
-			 Player player = playerRepository.findByUserName(inputName);
+			 Player player = playerService.findByUserName(inputName);
 			 if (player != null) {
 				 return new User(player.getUserName(), player.getPassword(),
 						 AuthorityUtils.createAuthorityList("USER"));

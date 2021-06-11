@@ -41,7 +41,10 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public Player findByUserName(String username) {
-        return playerRepository.findByUserName(username).get();
+        if(playerRepository.findByUserName(username).isPresent())
+            return playerRepository.findByUserName(username).get();
+        else
+            return null;
     }
 
     @Override

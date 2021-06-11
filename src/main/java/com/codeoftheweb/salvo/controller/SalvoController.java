@@ -83,6 +83,13 @@ public class SalvoController {
             return new ResponseEntity<Map<String, Object>>(util.makeMap("error","Not Authorized"),HttpStatus.UNAUTHORIZED);
         }
 
+        gpMap = makeGameView(gamePlayer,gpMap);
+
+        return new ResponseEntity<Map<String, Object>>(gpMap, HttpStatus.OK);
+    }
+
+    private Map<String, Object> makeGameView(GamePlayer gamePlayer, Map<String, Object> gpMap){
+
         Set<Ship> ships = gamePlayer.getShips();
         Game game = gamePlayer.getGame();
         Set<GamePlayer> players = game.getGamePlayers();
@@ -93,8 +100,15 @@ public class SalvoController {
         hits.put("opponent", new ArrayList<>());
 
 
+
         //Game Information
-        gpMap = gameToDTO(gamePlayer.getGame());
+        //gpMap = gameToDTO(gamePlayer.getGame());
+        gpMap.put("id", game.getId());
+        gpMap.put("created", game.getGameDate());
+        gpMap.put("gamePlayers", game.getGamePlayers().stream()
+                .map(gp -> this.gamePlayersToDTO(gp))
+                .collect(toList()));
+
         //Game State
         gpMap.put("gameState", "PLACESHIPS");
         //Ships Information
@@ -109,9 +123,8 @@ public class SalvoController {
 
         gpMap.put("hits", hits);
 
-        return new ResponseEntity<Map<String, Object>>(gpMap, HttpStatus.OK);
+        return gpMap;
     }
-
 
 
     private Map<String, Object> gameToDTO(Game game) {
@@ -219,13 +232,20 @@ public class SalvoController {
             return new ResponseEntity<>(util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         }else {
             Game game = gameService.findById(nn);
-            long n_players = game.getGamePlayers().size();
             if (game == null) {
                 return new ResponseEntity<>(util.makeMap("error","No Such game"), HttpStatus.FORBIDDEN);
             }
+
+            long n_players = game.getGamePlayers().size();
             if( n_players>1){
                 return new ResponseEntity<>(util.makeMap("error","Game is full"), HttpStatus.FORBIDDEN);
             }
+
+            List<Player> players = game.getGamePlayers().stream().map(GamePlayer::getPlayer).collect(Collectors.toList());
+            if(players.contains(playerService.findByUserName(authentication.getName()))){
+                return new ResponseEntity<>(util.makeMap("error","Player already in game"), HttpStatus.FORBIDDEN);
+            }
+
             GamePlayer gamePlayer = gamePlayerService.saveGamePlayer(new GamePlayer(game,
                                                                         playerService.findByUserName(authentication.getName()),
                                                                         LocalDateTime.now()));
