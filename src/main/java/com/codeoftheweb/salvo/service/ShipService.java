@@ -7,15 +7,15 @@ import java.util.List;
 
 public interface ShipService {
 
-    Ship savePlayer(Ship ship);
+    Ship saveShip(Ship ship);
 
-    List<Ship> getPlayer();
+    List<Ship> getShip();
 
-    Ship updatePlayer(Ship ship);
+    Ship updateShip(Ship ship);
 
-    boolean existPlayer(Long id);
+    boolean existShip(Long id);
 
-    Ship findPlayerById(Long id);
+    Ship findShipById(Long id);
 
     List<Ship> findAll();
 

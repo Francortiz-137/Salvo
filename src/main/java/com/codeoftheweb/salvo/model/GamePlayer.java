@@ -1,5 +1,6 @@
 package com.codeoftheweb.salvo.model;
 
+import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -24,8 +25,10 @@ public class GamePlayer {
     @OneToMany(mappedBy="gamePlayer", fetch=FetchType.EAGER , cascade = CascadeType.ALL)
     private Set<Ship> ships = new HashSet<Ship>();
 
+
+
     @OneToMany(mappedBy="gamePlayer", fetch=FetchType.EAGER , cascade = CascadeType.ALL)
-    private Set<Salvo> salvoes = new HashSet<Salvo>();
+    private Set<Salvo> salvos = new HashSet<Salvo>();
 
     private LocalDateTime date;
 
@@ -67,21 +70,26 @@ public class GamePlayer {
         return game;
     }
 
-
+    @JsonIgnore
     public void addShip(Ship ship){
+        ship.setGamePlayer(this);
         this.ships.add(ship);
     }
 
+    @JsonIgnore
     public Set<Ship> getShips() {
         return ships;
     }
 
+    @JsonIgnore
     public void addSalvo(Salvo salvo){
-        this.salvoes.add(salvo);
+        salvo.setGamePlayer(this);
+        this.salvos.add(salvo);
     }
 
-    public Set<Salvo> getSalvoes() {
-        return salvoes;
+    @JsonIgnore
+    public Set<Salvo> getSalvos() {
+        return salvos;
     }
 
     public Score getScore(Game game) {

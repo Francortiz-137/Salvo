@@ -18,19 +18,19 @@ public class Salvo {
     @JoinColumn(name="gamePlayer_id")
     private GamePlayer gamePlayer;
 
-    private int turn;
+    private long turn;
 
     @ElementCollection
     @Column(name="locations")
-    private List<String> locations = new ArrayList<>();
+    private List<String> salvoLocations = new ArrayList<>();
 
     public Salvo() {
     }
 
-    public Salvo(GamePlayer gamePlayer, int turn, List<String> locations) {
+    public Salvo(GamePlayer gamePlayer, Long turn, List<String> salvoLocations) {
         this.gamePlayer = gamePlayer;
         this.turn = turn;
-        this.locations = locations;
+        this.salvoLocations = salvoLocations;
     }
 
     public long getId() {
@@ -45,19 +45,19 @@ public class Salvo {
         this.gamePlayer = gamePlayer;
     }
 
-    public int getTurn() {
+    public long getTurn() {
         return turn;
     }
 
-    public void setTurn(int turn) {
+    public void setTurn(long turn) {
         this.turn = turn;
     }
 
-    public List<String> getLocations() {
-        return locations;
+    public List<String> getSalvoLocations() {
+        return salvoLocations;
     }
 
-    public void setLocations(List<String> locations) {
-        this.locations = locations;
+    public void setSalvoLocations(List<String> salvoLocations) {
+        this.salvoLocations = salvoLocations;
     }
 }

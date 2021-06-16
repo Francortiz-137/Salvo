@@ -19,12 +19,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 
@@ -33,8 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 @SpringBootApplication
 public class SalvoApplication extends SpringBootServletInitializer {
@@ -278,35 +273,35 @@ public class SalvoApplication extends SpringBootServletInitializer {
 			gamePlayerRepo.save(gmp14);
 
 			//GAME1
-			Salvo salvo1 = new Salvo(gmp1,1,Arrays.asList("B5","C5","F1"));
-			Salvo salvo2 = new Salvo(gmp1,2,Arrays.asList("F2","D5"));
-			Salvo salvo3 = new Salvo(gmp2,1,Arrays.asList("B4","B5","B6"));
-			Salvo salvo4 = new Salvo(gmp2,2,Arrays.asList("E1","H3","A2"));
+			Salvo salvo1 = new Salvo(gmp1,Long.parseLong("1"),Arrays.asList("B5","C5","F1"));
+			Salvo salvo2 = new Salvo(gmp1,Long.parseLong("2"),Arrays.asList("F2","D5"));
+			Salvo salvo3 = new Salvo(gmp2,Long.parseLong("1"),Arrays.asList("B4","B5","B6"));
+			Salvo salvo4 = new Salvo(gmp2,Long.parseLong("2"),Arrays.asList("E1","H3","A2"));
 
 			//GAME2
-			Salvo salvo5 = new Salvo(gmp3,1,Arrays.asList("A2","A4","G6"));
-			Salvo salvo6 = new Salvo(gmp3,2,Arrays.asList("A3","H6"));
-			Salvo salvo7 = new Salvo(gmp4,1,Arrays.asList("B5","D5","C7"));
-			Salvo salvo8 = new Salvo(gmp4,2,Arrays.asList("C5","C6"));
+			Salvo salvo5 = new Salvo(gmp3,Long.parseLong("1"),Arrays.asList("A2","A4","G6"));
+			Salvo salvo6 = new Salvo(gmp3,Long.parseLong("2"),Arrays.asList("A3","H6"));
+			Salvo salvo7 = new Salvo(gmp4,Long.parseLong("1"),Arrays.asList("B5","D5","C7"));
+			Salvo salvo8 = new Salvo(gmp4,Long.parseLong("2"),Arrays.asList("C5","C6"));
 
 			//GAME3
-			Salvo salvo9 = new Salvo(gmp5,1,Arrays.asList("G6","H6","A4"));
-			Salvo salvo10 = new Salvo(gmp5,2,Arrays.asList("A2","A3","D8"));
-			Salvo salvo11 = new Salvo(gmp6,1,Arrays.asList("H1","H2","H3"));
-			Salvo salvo12 = new Salvo(gmp6,2,Arrays.asList("E1","F2","G3"));
+			Salvo salvo9 = new Salvo(gmp5,Long.parseLong("1"),Arrays.asList("G6","H6","A4"));
+			Salvo salvo10 = new Salvo(gmp5,Long.parseLong("2"),Arrays.asList("A2","A3","D8"));
+			Salvo salvo11 = new Salvo(gmp6,Long.parseLong("1"),Arrays.asList("H1","H2","H3"));
+			Salvo salvo12 = new Salvo(gmp6,Long.parseLong("2"),Arrays.asList("E1","F2","G3"));
 
 			//GAME4
-			Salvo salvo13 = new Salvo(gmp7,1,Arrays.asList("A3","A4","F7"));
-			Salvo salvo14 = new Salvo(gmp7,2,Arrays.asList("A2","G6","H6"));
-			Salvo salvo15 = new Salvo(gmp8,1,Arrays.asList("B5","C6","H1"));
-			Salvo salvo16 = new Salvo(gmp8,2,Arrays.asList("C5","C7","D5"));
+			Salvo salvo13 = new Salvo(gmp7,Long.parseLong("1"),Arrays.asList("A3","A4","F7"));
+			Salvo salvo14 = new Salvo(gmp7,Long.parseLong("2"),Arrays.asList("A2","G6","H6"));
+			Salvo salvo15 = new Salvo(gmp8,Long.parseLong("1"),Arrays.asList("B5","C6","H1"));
+			Salvo salvo16 = new Salvo(gmp8,Long.parseLong("2"),Arrays.asList("C5","C7","D5"));
 
 			//GAME5
-			Salvo salvo17 = new Salvo(gmp9,1,Arrays.asList("A1","A2","A3"));
-			Salvo salvo18 = new Salvo(gmp9,2,Arrays.asList("G6","G7","EG8"));
-			Salvo salvo19 = new Salvo(gmp10,1,Arrays.asList("B5","B6","C7"));
-			Salvo salvo20 = new Salvo(gmp10,2,Arrays.asList("C6","D6","E6"));
-			Salvo salvo21 = new Salvo(gmp10,3,Arrays.asList("H1","H8"));
+			Salvo salvo17 = new Salvo(gmp9,Long.parseLong("1"),Arrays.asList("A1","A2","A3"));
+			Salvo salvo18 = new Salvo(gmp9,Long.parseLong("2"),Arrays.asList("G6","G7","EG8"));
+			Salvo salvo19 = new Salvo(gmp10,Long.parseLong("1"),Arrays.asList("B5","B6","C7"));
+			Salvo salvo20 = new Salvo(gmp10,Long.parseLong("2"),Arrays.asList("C6","D6","E6"));
+			Salvo salvo21 = new Salvo(gmp10,Long.parseLong("3"),Arrays.asList("H1","H8"));
 
 
 

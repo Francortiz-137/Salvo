@@ -1,7 +1,10 @@
 package com.codeoftheweb.salvo.service.implementation;
 
+import com.codeoftheweb.salvo.model.Salvo;
 import com.codeoftheweb.salvo.model.Ship;
+import com.codeoftheweb.salvo.repository.SalvoRepository;
 import com.codeoftheweb.salvo.repository.ShipRepository;
+import com.codeoftheweb.salvo.service.SalvoService;
 import com.codeoftheweb.salvo.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,38 +12,38 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ShipServiceImpl implements ShipService {
+public class SalvoServiceImpl implements SalvoService {
 
     @Autowired
-    ShipRepository shipRepository;
+    SalvoRepository salvoRepository;
 
     @Override
-    public Ship saveShip(Ship ship) {
-        return shipRepository.save(ship);
+    public Salvo saveSalvo(Salvo salvo) {
+        return salvoRepository.save(salvo);
     }
 
     @Override
-    public List<Ship> getShip() {
+    public List<Salvo> getSalvo() {
         return null;
     }
 
     @Override
-    public Ship updateShip(Ship ship) {
+    public Salvo updateSalvo(Salvo salvo) {
         return null;
     }
 
     @Override
-    public boolean existShip(Long id) {
+    public boolean existSalvo(Long id) {
         return false;
     }
 
     @Override
-    public Ship findShipById(Long id) {
+    public Salvo findSalvoById(Long id) {
         return null;
     }
 
     @Override
-    public List<Ship> findAll() {
+    public List<Salvo> findAll() {
         return null;
     }
 }

@@ -1,5 +1,6 @@
 package com.codeoftheweb.salvo.model;
 
+import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -21,15 +22,15 @@ public class Ship {
 
     @ElementCollection
     @Column(name="locations")
-    private List<String> locations = new ArrayList<>();
+    private List<String> shipLocations = new ArrayList<>();
 
     public Ship() {
     }
 
-    public Ship(String type, GamePlayer gamePlayer, List<String> locations) {
+    public Ship(String type, GamePlayer gamePlayer, List<String> shipLocations) {
         this.type = type;
         this.gamePlayer = gamePlayer;
-        this.locations = locations;
+        this.shipLocations = shipLocations;
     }
 
     public long getId() {
@@ -48,16 +49,16 @@ public class Ship {
         this.gamePlayer = gamePlayer;
     }
 
-    public List<String> getLocations() {
-        return locations;
+    public List<String> getShipLocations() {
+        return shipLocations;
     }
 
-    public void setLocations(List<String> locations) {
-        this.locations = locations;
+    public void setShipLocations(List<String> locations) {
+        this.shipLocations = locations;
     }
 
 
-
+    @JsonIgnore
     public GamePlayer getGamePlayer() {
         return gamePlayer;
     }

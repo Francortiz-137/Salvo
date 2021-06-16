@@ -42,6 +42,7 @@ public class Game {
     }
 
 
+    @JsonIgnore
     public Set<GamePlayer> getGamePlayers() {
         return gamePlayers;
     }
