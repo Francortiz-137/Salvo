@@ -149,33 +149,31 @@ public class SalvoController {
         Set<Ship> myShips = gamePlayer.getShips();
         Set<Ship> enemyShips = enemy.getShips();
 
-        AtomicInteger cAcc = new AtomicInteger();
-        AtomicInteger bAcc = new AtomicInteger();
-        AtomicInteger dAcc = new AtomicInteger();
-        AtomicInteger sAcc = new AtomicInteger();
-        AtomicInteger pAcc = new AtomicInteger();
+        Map<String,AtomicInteger> myHitAccumulator = createAccumulator();
+        Map<String,AtomicInteger> enemyHitAccumulator = createAccumulator();
 
         turns.stream().sorted().forEach( turn -> {
-
             Salvo mySalvo = gamePlayer.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
             Salvo enemySalvo = enemy.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
 
-            self.add(makeHits(turn,enemySalvo,myShips,cAcc,bAcc,dAcc,sAcc,pAcc));
-            opponent.add(makeHits(turn,mySalvo,enemyShips,cAcc,bAcc,dAcc,sAcc,pAcc));
-
+            self.add(makeHits(turn,enemySalvo,myShips,myHitAccumulator));
+            opponent.add(makeHits(turn,mySalvo,enemyShips,enemyHitAccumulator));
        });
+
         Map<String, Object> dto = Util.makeMap("self",self);
         dto.put("opponent",opponent);
         return dto;
     }
 
-    private Map<String, Object> makeHits(long turn,Salvo salvo, Set<Ship> ships,
-                                         AtomicInteger cAcc, AtomicInteger bAcc, AtomicInteger dAcc,
-                                         AtomicInteger sAcc, AtomicInteger pAcc) {
+
+    private Map<String, Object> makeHits(long turn,Salvo salvo, Set<Ship> ships, Map<String,AtomicInteger> hitAcc) {
         Map<String,Object> hitMap = Util.makeMap("turn",turn);
         List<String> hitLocations = getHitLocations(salvo,ships);
+        int missedShots = salvo.getSalvoLocations().size() - hitLocations.size();
+
         hitMap.put("hitLocations", hitLocations);
-        hitMap.put("damages",getDamages(hitLocations,ships,cAcc,bAcc,dAcc,sAcc,pAcc));
+        hitMap.put("damages",getDamages(hitLocations,ships,hitAcc));
+        hitMap.put("missed",missedShots);
 
         return hitMap;
     }
@@ -186,25 +184,21 @@ public class SalvoController {
             enemyShips: set of ships with its locations
             return List with the locations that match the salvos with the enemyships
          */
+
         List<String> salvoLocation = salvo.getSalvoLocations();
         List<String> hitLocations = new ArrayList<String>();
 
-        //por cada salvolocation, recorrer los barcos y agregar a la lista las locaciones q coincidan con salvoLocation
+        //for each salvolocation, loop the ships and search of the salvo location is in the list of locations of the ship
         salvoLocation.stream().forEach( salvoL->{
             enemyShips.stream().forEach(ship -> {
-                ship.getShipLocations().stream().forEach(shipL -> {
-                        if(shipL.equals(salvoL))
+                if(ship.getShipLocations().contains(salvoL))
                             hitLocations.add(salvoL);
-                });
             });
         });
-
         return hitLocations;
     }
 
-    private Map<String,Object> getDamages(List<String> hitLocations, Set<Ship> ships,
-                                          AtomicInteger cAcc, AtomicInteger bAcc, AtomicInteger dAcc,
-                                          AtomicInteger sAcc, AtomicInteger pAcc) {
+    private Map<String,Object> getDamages(List<String> hitLocations, Set<Ship> ships, Map<String,AtomicInteger> hitAcc) {
         /* params:
             hitLocations: locations where a salvo hit a ship
             enemyShips: set of ships with its locations
@@ -212,71 +206,74 @@ public class SalvoController {
          */
         Map<String,Object> damage = new LinkedHashMap<>();
 
-        List<Ship> carriers = ships.stream().filter(sh->sh.getType().toLowerCase().equals("carrier")).collect(Collectors.toList());
-        List<Ship> battleships = ships.stream().filter(sh->sh.getType().toLowerCase().equals("battleship")).collect(Collectors.toList());
-        List<Ship> destroyers = ships.stream().filter(sh->sh.getType().toLowerCase().equals("destroyer")).collect(Collectors.toList());
-        List<Ship> submarines = ships.stream().filter(sh->sh.getType().toLowerCase().equals("submarine")).collect(Collectors.toList());
-        List<Ship> patrolBoats = ships.stream().filter(sh->sh.getType().toLowerCase().equals("patrolboat")).collect(Collectors.toList());
+        List<String> carriers = getShipsBytype("carrier",ships);
+        List<String> battleships = getShipsBytype("battleship",ships);
+        List<String> destroyers = getShipsBytype("destroyer",ships);
+        List<String> submarines = getShipsBytype("submarine",ships);
+        List<String> patrolBoats = getShipsBytype("patrolboat",ships);
 
-        AtomicInteger cCounter = new AtomicInteger();
-        AtomicInteger bCounter = new AtomicInteger();
-        AtomicInteger dCounter = new AtomicInteger();
-        AtomicInteger sCounter = new AtomicInteger();
-        AtomicInteger pCounter = new AtomicInteger();
+        Map<String, AtomicInteger> counter = createAccumulator();
 
+        //for each hit if the hit is in a certain type of ship then increment the counter for this turn and the accumulated counter and add to the map
+        // else add directly to the map without increment
         hitLocations.stream().forEach( hit ->{
 
-            if(carriers.stream().anyMatch(c-> c.getShipLocations().contains(hit))) {
-                damage.put("carrierHits", cCounter.getAndIncrement());
-                damage.put("carrier", cAcc.getAndIncrement());
+            if(carriers.contains(hit)) {
+                damage.put("carrierHits", counter.get("carrier").incrementAndGet());
+                damage.put("carrier", hitAcc.get("carrier").incrementAndGet());
             }else{
-                damage.put("carrierHits", 0);
-                damage.put("carrier", cAcc.get());
+                damage.put("carrierHits", counter.get("carrier").get());
+                damage.put("carrier", hitAcc.get("carrier").get());
             }
-            if(battleships.stream().anyMatch(c-> c.getShipLocations().contains(hit))){
-                damage.put("battleshipHits", bCounter.getAndIncrement());
-                damage.put("battleship", bAcc.getAndIncrement());
+            if(battleships.contains(hit)){
+                damage.put("battleshipHits", counter.get("battleship").incrementAndGet());
+                damage.put("battleship", hitAcc.get("battleship").incrementAndGet());
             }else{
-                damage.put("battleshipHits", 0);
-                damage.put("battleship", bAcc.get());
+                damage.put("battleshipHits", counter.get("battleship").get());
+                damage.put("battleship", hitAcc.get("battleship").get());
             }
-            if(destroyers.stream().anyMatch(c-> c.getShipLocations().contains(hit))){
-                damage.put("destroyerHits", dCounter.getAndIncrement());
-                damage.put("destroyer", dAcc.getAndIncrement());
+            if(destroyers.contains(hit)){
+                damage.put("destroyerHits", counter.get("destroyer").incrementAndGet());
+                damage.put("destroyer", hitAcc.get("destroyer").incrementAndGet());
             }else{
-                damage.put("destroyerHits", 0);
-                damage.put("destroyer", dAcc.get());
+                damage.put("destroyerHits", counter.get("destroyer").get());
+                damage.put("destroyer", hitAcc.get("destroyer").get());
             }
-            if(submarines.stream().anyMatch(c-> c.getShipLocations().contains(hit))){
-                damage.put("submarineHits", sCounter.getAndIncrement());
-                damage.put("submarine", sAcc.getAndIncrement());
+            if(submarines.contains(hit)){
+                damage.put("submarineHits", counter.get("submarine").incrementAndGet());
+                damage.put("submarine", hitAcc.get("submarine").incrementAndGet());
             }else{
-                damage.put("submarineHits", 0);
-                damage.put("submarine", sAcc.get());
+                damage.put("submarineHits", counter.get("submarine").get());
+                damage.put("submarine", hitAcc.get("submarine").get());
             }
-            if(patrolBoats.stream().anyMatch(c-> c.getShipLocations().contains(hit))){
-                damage.put("patrolboatHits", pCounter.getAndIncrement());
-                damage.put("patrolboat", pAcc.getAndIncrement());
+            if(patrolBoats.contains(hit)){
+                damage.put("patrolboatHits", counter.get("patrolboat").incrementAndGet());
+                damage.put("patrolboat", hitAcc.get("patrolboat").incrementAndGet());
             }else{
-                damage.put("patrolboatHits", 0);
-                damage.put("patrolboat", pAcc.get());
+                damage.put("patrolboatHits", counter.get("patrolboat").get());
+                damage.put("patrolboat", hitAcc.get("patrolboat").get());
             }
-
         });
 
-        /*
-        ships.forEach(ship-> {
-
-            switch(ship.getType().toLowerCase()){
-                case "carrier":  ;break;
-                case "battleship":  ;break;
-                case "destroyer":  ;break;
-                case "submarine":  ;break;
-                case "patrolboat":  ;break;
-            }
-        });
-         */
         return damage;
+    }
+
+    private List<String> getShipsBytype(String type, Set<Ship> ships) {
+        return ships.stream().filter(sh->sh.getType().toLowerCase().equals(type))
+                .map(Ship::getShipLocations).flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+
+    private Map<String, AtomicInteger> createAccumulator() {
+
+        Map<String,AtomicInteger> hitAccumulator = new HashMap<String,AtomicInteger>();
+        hitAccumulator.put("carrier",new AtomicInteger());
+        hitAccumulator.put("battleship",new AtomicInteger());
+        hitAccumulator.put("destroyer",new AtomicInteger());
+        hitAccumulator.put("submarine",new AtomicInteger());
+        hitAccumulator.put("patrolboat",new AtomicInteger());
+
+        return hitAccumulator;
     }
 
 }
