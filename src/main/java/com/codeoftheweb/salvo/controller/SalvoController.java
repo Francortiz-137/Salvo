@@ -96,13 +96,6 @@ public class SalvoController {
         Set<GamePlayer> players = game.getGamePlayers();
         Set<Salvo> salvos = players.stream().map(GamePlayer::getSalvos).flatMap(Collection::stream).collect(Collectors.toSet());
 
-        /*
-        Map<String,Object> hits = new LinkedHashMap<String,Object>();
-        hits.put("self", new ArrayList<>());
-        hits.put("opponent", new ArrayList<>());
-         */
-
-
         //Game Information
         //gpMap = gameToDTO(gamePlayer.getGame());
         gpMap.put("id", game.getId());
@@ -111,8 +104,6 @@ public class SalvoController {
                 .map(gp -> DTO.gamePlayersToDTO(gp))
                 .collect(toList()));
 
-        //Game State
-        gpMap.put("gameState", "PLACESHIPS");
         //Ships Information
         gpMap.put("ships", ships.stream()
                 .map(sh -> DTO.shipsToDTO(sh))
@@ -123,7 +114,12 @@ public class SalvoController {
                 .map(sal -> DTO.salvosToDTO(sal))
                 .collect(toList()));
 
-        gpMap.put("hits", hitsToDTO(gamePlayer));
+        //Hits
+        Map<String, List<Map<String,Object>> > hits = hitsToDTO(gamePlayer);
+        gpMap.put("hits", hits);
+
+        //Game State
+        gpMap.put("gameState", getGameState(gamePlayer,hits));
 
         return gpMap;
     }
@@ -138,12 +134,13 @@ public class SalvoController {
             return null;
     }
 
-    private Map<String, Object> hitsToDTO(GamePlayer gamePlayer){
+    private Map<String, List<Map<String,Object>> > hitsToDTO(GamePlayer gamePlayer){
 
         List<Map<String,Object>> self = new ArrayList<Map<String,Object>>();
         List<Map<String,Object>> opponent = new ArrayList<Map<String,Object>>();
 
-        GamePlayer enemy = gamePlayer.getGame().getGamePlayers().stream().filter(gp -> gp.getId() != gamePlayer.getId()).findFirst().orElse(null);
+        GamePlayer enemy = gamePlayer.getGame().getGamePlayers().stream().filter(gp -> gp.getId() != gamePlayer.getId()).findFirst().orElse(new GamePlayer());
+
         Set<Long> turns = gamePlayer.getSalvos().stream().map(Salvo::getTurn).collect(Collectors.toSet());
 
         Set<Ship> myShips = gamePlayer.getShips();
@@ -152,15 +149,22 @@ public class SalvoController {
         Map<String,AtomicInteger> myHitAccumulator = createAccumulator();
         Map<String,AtomicInteger> enemyHitAccumulator = createAccumulator();
 
+        Map<String, List<Map<String,Object>> > dto = new LinkedHashMap<String, List<Map<String,Object>>>();
+
         turns.stream().sorted().forEach( turn -> {
             Salvo mySalvo = gamePlayer.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
             Salvo enemySalvo = enemy.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
 
-            self.add(makeHits(turn,enemySalvo,myShips,myHitAccumulator));
-            opponent.add(makeHits(turn,mySalvo,enemyShips,enemyHitAccumulator));
+            if(enemySalvo != null ) {
+                self.add(makeHits(turn, enemySalvo, myShips, myHitAccumulator));
+            }
+            if(mySalvo != null) {
+                opponent.add(makeHits(turn, mySalvo, enemyShips, enemyHitAccumulator));
+            }
        });
 
-        Map<String, Object> dto = Util.makeMap("self",self);
+
+        dto.put("self",self);
         dto.put("opponent",opponent);
         return dto;
     }
@@ -169,10 +173,11 @@ public class SalvoController {
     private Map<String, Object> makeHits(long turn,Salvo salvo, Set<Ship> ships, Map<String,AtomicInteger> hitAcc) {
         Map<String,Object> hitMap = Util.makeMap("turn",turn);
         List<String> hitLocations = getHitLocations(salvo,ships);
-        int missedShots = salvo.getSalvoLocations().size() - hitLocations.size();
 
         hitMap.put("hitLocations", hitLocations);
         hitMap.put("damages",getDamages(hitLocations,ships,hitAcc));
+
+        int missedShots = salvo.getSalvoLocations().size() - hitLocations.size();
         hitMap.put("missed",missedShots);
 
         return hitMap;
@@ -184,9 +189,11 @@ public class SalvoController {
             enemyShips: set of ships with its locations
             return List with the locations that match the salvos with the enemyships
          */
+        List<String> hitLocations = new ArrayList<String>();
+        if( salvo == null) return hitLocations;
 
         List<String> salvoLocation = salvo.getSalvoLocations();
-        List<String> hitLocations = new ArrayList<String>();
+
 
         //for each salvolocation, loop the ships and search of the salvo location is in the list of locations of the ship
         salvoLocation.stream().forEach( salvoL->{
@@ -219,40 +226,36 @@ public class SalvoController {
         hitLocations.stream().forEach( hit ->{
 
             if(carriers.contains(hit)) {
-                damage.put("carrierHits", counter.get("carrier").incrementAndGet());
-                damage.put("carrier", hitAcc.get("carrier").incrementAndGet());
-            }else{
-                damage.put("carrierHits", counter.get("carrier").get());
-                damage.put("carrier", hitAcc.get("carrier").get());
+                counter.get("carrier").incrementAndGet();
+                hitAcc.get("carrier").incrementAndGet();
             }
             if(battleships.contains(hit)){
-                damage.put("battleshipHits", counter.get("battleship").incrementAndGet());
-                damage.put("battleship", hitAcc.get("battleship").incrementAndGet());
-            }else{
-                damage.put("battleshipHits", counter.get("battleship").get());
-                damage.put("battleship", hitAcc.get("battleship").get());
+                counter.get("battleship").incrementAndGet();
+                hitAcc.get("battleship").incrementAndGet();
             }
             if(destroyers.contains(hit)){
-                damage.put("destroyerHits", counter.get("destroyer").incrementAndGet());
-                damage.put("destroyer", hitAcc.get("destroyer").incrementAndGet());
-            }else{
-                damage.put("destroyerHits", counter.get("destroyer").get());
-                damage.put("destroyer", hitAcc.get("destroyer").get());
+                counter.get("destroyer").incrementAndGet();
+                hitAcc.get("destroyer").incrementAndGet();
             }
             if(submarines.contains(hit)){
-                damage.put("submarineHits", counter.get("submarine").incrementAndGet());
-                damage.put("submarine", hitAcc.get("submarine").incrementAndGet());
-            }else{
-                damage.put("submarineHits", counter.get("submarine").get());
-                damage.put("submarine", hitAcc.get("submarine").get());
+                counter.get("submarine").incrementAndGet();
+                hitAcc.get("submarine").incrementAndGet();
             }
             if(patrolBoats.contains(hit)){
-                damage.put("patrolboatHits", counter.get("patrolboat").incrementAndGet());
-                damage.put("patrolboat", hitAcc.get("patrolboat").incrementAndGet());
-            }else{
-                damage.put("patrolboatHits", counter.get("patrolboat").get());
-                damage.put("patrolboat", hitAcc.get("patrolboat").get());
+                counter.get("patrolboat").incrementAndGet();
+                hitAcc.get("patrolboat").incrementAndGet();
             }
+
+            damage.put("carrierHits", counter.get("carrier").get());
+            damage.put("battleshipHits", counter.get("battleship").get());
+            damage.put("destroyerHits", counter.get("destroyer").get());
+            damage.put("submarineHits", counter.get("submarine").get());
+            damage.put("patrolboatHits", counter.get("patrolboat").get());
+            damage.put("carrier", hitAcc.get("carrier").get());
+            damage.put("battleship", hitAcc.get("battleship").get());
+            damage.put("destroyer", hitAcc.get("destroyer").get());
+            damage.put("submarine", hitAcc.get("submarine").get());
+            damage.put("patrolboat", hitAcc.get("patrolboat").get());
         });
 
         return damage;
@@ -274,6 +277,65 @@ public class SalvoController {
         hitAccumulator.put("patrolboat",new AtomicInteger());
 
         return hitAccumulator;
+    }
+
+    private String getGameState(GamePlayer gamePlayer, Map<String, List<Map<String,Object>>> hits){
+
+         // Placeships es el primer estado por defecto al unirse a una partida, el gameplayer no tiene barcos posicionados
+          String state = "PLACESHIPS";
+          GamePlayer opponent = getOpponent(gamePlayer);
+
+         //Esperando a que ingrese un segundo oponente con sus barcos
+        if(gamePlayer!= null && gamePlayer.getShips().size() > 0 &&
+         (opponent.getShips().size() <= 0)
+            && state == "PLACESHIPS")
+            state = "WAITINGFOROPP";
+
+
+        if( opponent.getShips().size() > 0 && gamePlayer.getShips().size() > 0
+            && gamePlayer.getSalvos().size() <= opponent.getSalvos().size())
+            state = "PLAY";
+
+
+        //wait for salvoes (esperando salvos del oponente)
+        if( gamePlayer.getSalvos().size() > opponent.getSalvos().size())
+            state = "WAIT";
+
+
+        boolean loseSelf = shipsSunk(gamePlayer,opponent);
+        boolean loseOpp = shipsSunk(opponent,gamePlayer);
+        //En que condiciones es una victoria?: cuando el oponente tiene hundidos todos sus barcos(ojo con el inicio del juego donde no hay barcos)
+        if(!loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+            state = "WON";
+            //agregar una victoria al score +1
+            // updateScore()
+        //Ambos jugadores hundieron sus barcos en el mismo turno
+
+        if(loseSelf && loseOpp&& gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+            state = "TIE";
+            //agregar un empate al score +0.5
+
+        /* Tienes todos tus barcos hundidos pero el oponente no
+        * */
+        if(loseSelf && !loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+            state = "LOST";
+            //agregar una derrota al score (? +0
+
+        return state;
+    }
+
+    private boolean shipsSunk(GamePlayer gamePlayer, GamePlayer opponent) {
+        //return true if all of gameplayer ships are sunk
+
+        if(!opponent.getShips().isEmpty() && !gamePlayer.getSalvos().isEmpty()){
+            return opponent.getSalvos().stream().flatMap(salvo -> salvo.getSalvoLocations().stream()).collect(Collectors.toList()).containsAll(gamePlayer.getShips().stream()
+                    .flatMap(ship -> ship.getShipLocations().stream()).collect(Collectors.toList()));
+        }
+        return false;
+    }
+
+    private GamePlayer getOpponent(GamePlayer gamePlayer) {
+        return gamePlayer.getGame().getGamePlayers().stream().filter(gp -> gp.getId() != gamePlayer.getId()).findFirst().orElse(new GamePlayer());
     }
 
 }

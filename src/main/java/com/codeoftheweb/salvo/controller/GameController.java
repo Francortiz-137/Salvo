@@ -118,8 +118,6 @@ public class GameController {
             return new ResponseEntity<>(Util.makeMap("error","Invalid ship size"), HttpStatus.FORBIDDEN);
         }
 
-        //TODO validate ship size for type
-
         //validate max number of ships == 5
         if(ships.size() > 5){
             return new ResponseEntity<>(Util.makeMap("error","Max number of ships reached"), HttpStatus.FORBIDDEN);
@@ -128,13 +126,14 @@ public class GameController {
         // save each ship and add it to the gameplayer
         ships.stream().forEach((ship)->{
 
-            gamePlayer.addShip(shipService.saveShip(ship));
+            gamePlayer.addShip(ship);
+            shipService.saveShip(ship);
         });
 
         return new ResponseEntity<>((Util.makeMap("OK","Ship Created")),HttpStatus.CREATED);
     }
 
-    @PostMapping("/games/players/{gamePlayerId}/salvos")
+    @PostMapping("/games/players/{gamePlayerId}/salvoes")
     public ResponseEntity<Object> saveSalvoes(@PathVariable Long gamePlayerId, @RequestBody Salvo salvo, Authentication authentication){
 
         //validate if is logged in
