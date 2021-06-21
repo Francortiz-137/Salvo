@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -32,6 +33,8 @@ public class SalvoController {
     private ShipService shipService;
     @Autowired
     private SalvoService salvoService;
+    @Autowired
+    private ScoreService scoreService;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -279,49 +282,60 @@ public class SalvoController {
         return hitAccumulator;
     }
 
-    private String getGameState(GamePlayer gamePlayer, Map<String, List<Map<String,Object>>> hits){
+    private String getGameState(GamePlayer gamePlayer, Map<String, List<Map<String,Object>>> hits) {
 
-         // Placeships es el primer estado por defecto al unirse a una partida, el gameplayer no tiene barcos posicionados
-          String state = "PLACESHIPS";
-          GamePlayer opponent = getOpponent(gamePlayer);
+        // Placeships es el primer estado por defecto al unirse a una partida, el gameplayer no tiene barcos posicionados
+        String state = "PLACESHIPS";
+        GamePlayer opponent = getOpponent(gamePlayer);
 
-         //Esperando a que ingrese un segundo oponente con sus barcos
-        if(gamePlayer!= null && gamePlayer.getShips().size() > 0 &&
-         (opponent.getShips().size() <= 0)
-            && state == "PLACESHIPS")
+        //Esperando a que ingrese un segundo oponente con sus barcos
+        if (gamePlayer.getShips().size() > 0 && (opponent.getShips().size() <= 0) && state == "PLACESHIPS")
             state = "WAITINGFOROPP";
 
 
-        if( opponent.getShips().size() > 0 && gamePlayer.getShips().size() > 0
-            && gamePlayer.getSalvos().size() <= opponent.getSalvos().size())
+        if (opponent.getShips().size() > 0 && gamePlayer.getShips().size() > 0
+                && gamePlayer.getSalvos().size() <= opponent.getSalvos().size())
             state = "PLAY";
 
 
         //wait for salvoes (esperando salvos del oponente)
-        if( gamePlayer.getSalvos().size() > opponent.getSalvos().size())
+        if (gamePlayer.getSalvos().size() > opponent.getSalvos().size())
             state = "WAIT";
 
 
-        boolean loseSelf = shipsSunk(gamePlayer,opponent);
-        boolean loseOpp = shipsSunk(opponent,gamePlayer);
+        boolean loseSelf = shipsSunk(gamePlayer, opponent);
+        boolean loseOpp = shipsSunk(opponent, gamePlayer);
         //En que condiciones es una victoria?: cuando el oponente tiene hundidos todos sus barcos(ojo con el inicio del juego donde no hay barcos)
-        if(!loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+        if (!loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()) {
             state = "WON";
             //agregar una victoria al score +1
-            // updateScore()
+            updateScore(gamePlayer, 1);
+            updateScore(opponent, 0);
+        }
         //Ambos jugadores hundieron sus barcos en el mismo turno
 
-        if(loseSelf && loseOpp&& gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+        if (loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()) {
             state = "TIE";
             //agregar un empate al score +0.5
-
+            updateScore(gamePlayer, 0.5);
+            updateScore(opponent, 0.5);
+        }
         /* Tienes todos tus barcos hundidos pero el oponente no
-        * */
-        if(loseSelf && !loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size())
+         * */
+        if (loseSelf && !loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()){
             state = "LOST";
             //agregar una derrota al score (? +0
-
+            updateScore(gamePlayer, 0);
+            updateScore(opponent, 1);
+        }
         return state;
+    }
+
+    private void updateScore(GamePlayer gamePlayer, double points) {
+        Score newScore = new Score(gamePlayer.getPlayer(),gamePlayer.getGame(), LocalDateTime.now(),points);
+        gamePlayer.getPlayer().addScore(newScore);
+        gamePlayer.getGame().addScore(newScore);
+        scoreService.saveScore(newScore);
     }
 
     private boolean shipsSunk(GamePlayer gamePlayer, GamePlayer opponent) {
