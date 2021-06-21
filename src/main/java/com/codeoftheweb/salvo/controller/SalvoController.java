@@ -55,7 +55,7 @@ public class SalvoController {
         if(!Util.isGuest(authentication)) {
             Map<String,Object> dtoPlayer = new LinkedHashMap<>();
             dtoPlayer.put("id", getUser(authentication).getId());
-            dtoPlayer.put("email", getUser(authentication).getName());
+            dtoPlayer.put("email", getUser(authentication).getUserName());
             gMap.put("player", dtoPlayer);
 
         }else{
@@ -332,7 +332,7 @@ public class SalvoController {
     }
 
     private void updateScore(GamePlayer gamePlayer, double points) {
-
+        // when the game is over assign to the player the corresponding score
         Score newScore = new Score(gamePlayer.getPlayer(),gamePlayer.getGame(), LocalDateTime.now(),points);
         gamePlayer.getPlayer().addScore(newScore);
         gamePlayer.getGame().addScore(newScore);
