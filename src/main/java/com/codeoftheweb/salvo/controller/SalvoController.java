@@ -332,6 +332,7 @@ public class SalvoController {
     }
 
     private void updateScore(GamePlayer gamePlayer, double points) {
+
         Score newScore = new Score(gamePlayer.getPlayer(),gamePlayer.getGame(), LocalDateTime.now(),points);
         gamePlayer.getPlayer().addScore(newScore);
         gamePlayer.getGame().addScore(newScore);
