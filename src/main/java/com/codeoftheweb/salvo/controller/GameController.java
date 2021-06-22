@@ -37,6 +37,8 @@ public class GameController {
 
     @RequestMapping(path = "/players", method = RequestMethod.POST)
     public ResponseEntity<Object> register(
+            //create a new player
+
             @RequestParam String email, @RequestParam String password) {
 
         if (email.isEmpty() || password.isEmpty()) {
@@ -53,6 +55,8 @@ public class GameController {
 
     @RequestMapping(path = "/games", method = RequestMethod.POST)
     public ResponseEntity<Object> addGame(Authentication authentication){
+        //create a new game and assign to the gameplayer that is requesting it
+
         if(Util.isGuest(authentication)){
             return new ResponseEntity<>(Util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         }else {
@@ -64,6 +68,8 @@ public class GameController {
 
     @RequestMapping(path = "/game/{nn}/players", method = RequestMethod.POST)
     public ResponseEntity<Object> joinGame(@PathVariable Long nn, Authentication authentication){
+        //receive a player , validates them and assign to the requested game
+
         if(Util.isGuest(authentication)){
             return new ResponseEntity<>(Util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         }else {
@@ -91,6 +97,7 @@ public class GameController {
 
     @PostMapping("/games/players/{gpid}/ships")
     public ResponseEntity<Object> saveShips(@PathVariable Long gpid, @RequestBody Set<Ship> ships, Authentication authentication){
+        //receive a set of ships validates it, save it and assign to a gameplayer
 
         //validate if is logged in
         if(Util.isGuest(authentication)) {

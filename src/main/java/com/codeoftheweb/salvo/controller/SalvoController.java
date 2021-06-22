@@ -93,7 +93,7 @@ public class SalvoController {
     }
 
     private Map<String, Object> makeGameView(GamePlayer gamePlayer, Map<String, Object> gpMap){
-
+        //return a map of a determined game information
         Set<Ship> ships = gamePlayer.getShips();
         Game game = gamePlayer.getGame();
         Set<GamePlayer> players = game.getGamePlayers();
@@ -138,7 +138,7 @@ public class SalvoController {
     }
 
     private Map<String, List<Map<String,Object>> > hitsToDTO(GamePlayer gamePlayer){
-
+        // return a map with a list of hits for self and opponent
         List<Map<String,Object>> self = new ArrayList<Map<String,Object>>();
         List<Map<String,Object>> opponent = new ArrayList<Map<String,Object>>();
 
@@ -155,15 +155,12 @@ public class SalvoController {
         Map<String, List<Map<String,Object>> > dto = new LinkedHashMap<String, List<Map<String,Object>>>();
 
         turns.stream().sorted().forEach( turn -> {
-            Salvo mySalvo = gamePlayer.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
-            Salvo enemySalvo = enemy.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(null);
+            Salvo mySalvo = gamePlayer.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(new Salvo(null,turn, new ArrayList<>()));
+            Salvo enemySalvo = enemy.getSalvos().stream().filter(s-> s.getTurn() == turn).findFirst().orElse(new Salvo(null,turn, new ArrayList<>()));
 
-            if(enemySalvo != null ) {
                 self.add(makeHits(turn, enemySalvo, myShips, myHitAccumulator));
-            }
-            if(mySalvo != null) {
                 opponent.add(makeHits(turn, mySalvo, enemyShips, enemyHitAccumulator));
-            }
+
        });
 
 
@@ -174,6 +171,8 @@ public class SalvoController {
 
 
     private Map<String, Object> makeHits(long turn,Salvo salvo, Set<Ship> ships, Map<String,AtomicInteger> hitAcc) {
+        //return a map of hits with the turn, hitlocations, damages and missed shots
+
         Map<String,Object> hitMap = Util.makeMap("turn",turn);
         List<String> hitLocations = getHitLocations(salvo,ships);
 
@@ -212,7 +211,7 @@ public class SalvoController {
         /* params:
             hitLocations: locations where a salvo hit a ship
             enemyShips: set of ships with its locations
-            return List of ships hit
+            return: List of ships hit
          */
         Map<String,Object> damage = new LinkedHashMap<>();
 
@@ -224,7 +223,8 @@ public class SalvoController {
 
         Map<String, AtomicInteger> counter = createAccumulator();
 
-        //for each hit if the hit is in a certain type of ship then increment the counter for this turn and the accumulated counter and add to the map
+        //for each hit if the hit is in a certain type of ship then increment the counter for this turn
+        // and the accumulated counter and add to the map
         // else add directly to the map without increment
         hitLocations.stream().forEach( hit ->{
 
@@ -265,12 +265,14 @@ public class SalvoController {
     }
 
     private List<String> getShipsBytype(String type, Set<Ship> ships) {
+        //return a list with the locations of a ship given its type
         return ships.stream().filter(sh->sh.getType().toLowerCase().equals(type))
                 .map(Ship::getShipLocations).flatMap(Collection::stream).collect(Collectors.toList());
     }
 
 
     private Map<String, AtomicInteger> createAccumulator() {
+        //return a map with accumulators to count each ship number of hits
 
         Map<String,AtomicInteger> hitAccumulator = new HashMap<String,AtomicInteger>();
         hitAccumulator.put("carrier",new AtomicInteger());
@@ -284,19 +286,19 @@ public class SalvoController {
 
     private String getGameState(GamePlayer gamePlayer, Map<String, List<Map<String,Object>>> hits) {
 
-        // Placeships es el primer estado por defecto al unirse a una partida, el gameplayer no tiene barcos posicionados
+        // Placeships is the first state by default when a player joins a match
         String state = "PLACESHIPS";
         GamePlayer opponent = getOpponent(gamePlayer);
 
-        //Esperando a que ingrese un segundo oponente con sus barcos
-        if (gamePlayer.getShips().size() > 0 && (opponent.getShips().size() <= 0) && state == "PLACESHIPS")
+        // Wait for a second player with ships
+        if (gamePlayer.getShips().size() > 0 && (opponent.getShips().size() <= 0) && state == "PLACESHIPS"){
             state = "WAITINGFOROPP";
-
-
+        }
+        // play when ships already placed and the turn difference is at most 1
         if (opponent.getShips().size() > 0 && gamePlayer.getShips().size() > 0
-                && gamePlayer.getSalvos().size() <= opponent.getSalvos().size())
+                && gamePlayer.getSalvos().size() <= opponent.getSalvos().size()) {
             state = "PLAY";
-
+        }
 
         //wait for salvoes (esperando salvos del oponente)
         if (gamePlayer.getSalvos().size() > opponent.getSalvos().size())
@@ -305,26 +307,26 @@ public class SalvoController {
 
         boolean loseSelf = shipsSunk(gamePlayer, opponent);
         boolean loseOpp = shipsSunk(opponent, gamePlayer);
-        //En que condiciones es una victoria?: cuando el oponente tiene hundidos todos sus barcos(ojo con el inicio del juego donde no hay barcos)
+        //victory condition: all the opponent's ships are sunk, yours are not and both players are in the same turn
         if (!loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()) {
             state = "WON";
-            //agregar una victoria al score +1
+            //add a victory to the score +1
             updateScore(gamePlayer, 1);
             updateScore(opponent, 0);
         }
-        //Ambos jugadores hundieron sus barcos en el mismo turno
 
+        //both players ships were sunk in the same turn
         if (loseSelf && loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()) {
             state = "TIE";
-            //agregar un empate al score +0.5
+            //add a tie to the score +0.5
             updateScore(gamePlayer, 0.5);
             updateScore(opponent, 0.5);
         }
-        /* Tienes todos tus barcos hundidos pero el oponente no
-         * */
+        // Your ships are all sunk but your opponent's not in the same turn
+
         if (loseSelf && !loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()){
             state = "LOST";
-            //agregar una derrota al score (? +0
+            //add a lose to the score +0
             updateScore(gamePlayer, 0);
             updateScore(opponent, 1);
         }
@@ -332,7 +334,8 @@ public class SalvoController {
     }
 
     private void updateScore(GamePlayer gamePlayer, double points) {
-        // when the game is over assign to the player the corresponding score
+        // when the game is over assign to the player and game the corresponding score
+
         Score newScore = new Score(gamePlayer.getPlayer(),gamePlayer.getGame(), LocalDateTime.now(),points);
         gamePlayer.getPlayer().addScore(newScore);
         gamePlayer.getGame().addScore(newScore);
@@ -350,6 +353,7 @@ public class SalvoController {
     }
 
     private GamePlayer getOpponent(GamePlayer gamePlayer) {
+        //given a gamePlayer return the opponent in the same game
         return gamePlayer.getGame().getGamePlayers().stream().filter(gp -> gp.getId() != gamePlayer.getId()).findFirst().orElse(new GamePlayer());
     }
 
