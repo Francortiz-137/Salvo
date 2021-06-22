@@ -223,6 +223,19 @@ public class SalvoController {
 
         Map<String, AtomicInteger> counter = createAccumulator();
 
+        if(hitLocations.size()<=0){
+            damage.put("carrierHits", counter.get("carrier").get());
+            damage.put("battleshipHits", counter.get("battleship").get());
+            damage.put("destroyerHits", counter.get("destroyer").get());
+            damage.put("submarineHits", counter.get("submarine").get());
+            damage.put("patrolboatHits", counter.get("patrolboat").get());
+            damage.put("carrier", hitAcc.get("carrier").get());
+            damage.put("battleship", hitAcc.get("battleship").get());
+            damage.put("destroyer", hitAcc.get("destroyer").get());
+            damage.put("submarine", hitAcc.get("submarine").get());
+            damage.put("patrolboat", hitAcc.get("patrolboat").get());
+        }
+
         //for each hit if the hit is in a certain type of ship then increment the counter for this turn
         // and the accumulated counter and add to the map
         // else add directly to the map without increment
@@ -323,7 +336,6 @@ public class SalvoController {
             updateScore(opponent, 0.5);
         }
         // Your ships are all sunk but your opponent's not in the same turn
-
         if (loseSelf && !loseOpp && gamePlayer.getSalvos().size() == opponent.getSalvos().size()){
             state = "LOST";
             //add a lose to the score +0
